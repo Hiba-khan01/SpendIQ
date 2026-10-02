@@ -1,4 +1,4 @@
-# SpendIQ — Understand your spending. Improve your finances.
+# SpendIQ — Spend Smarter. Live Better.
 
 > **SpendIQ** is an AI-powered personal finance and expense management platform built with FastAPI, React (Vite), Tailwind CSS, Scikit-learn, and SQLAlchemy.
 
