@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -10,6 +10,8 @@ class ProfileUpdate(BaseModel):
     new_password: Optional[str] = None
 
 class ProfileResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     email: EmailStr
@@ -18,6 +20,3 @@ class ProfileResponse(BaseModel):
     total_transactions: int = 0
     total_spent_all_time: float = 0.0
     created_at: datetime
-
-    class Config:
-        from_attributes = True

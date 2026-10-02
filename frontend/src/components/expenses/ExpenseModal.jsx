@@ -48,7 +48,7 @@ export const ExpenseModal = ({
 
   // Real-time categorization helper while typing merchant or description
   useEffect(() => {
-    if (expenseToEdit) return; // don't auto-override when editing existing
+    if (expenseToEdit) return;
     const text = `${merchant} ${description}`.trim();
     if (text.length >= 3) {
       const timeout = setTimeout(async () => {
@@ -130,7 +130,7 @@ export const ExpenseModal = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Amount ({currency}) <span className="text-rose-500">*</span>
             </label>
             <input
@@ -140,12 +140,12 @@ export const ExpenseModal = ({
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Merchant / Store <span className="text-rose-500">*</span>
             </label>
             <input
@@ -154,15 +154,15 @@ export const ExpenseModal = ({
               placeholder="e.g. Swiggy, Uber, Amazon"
               value={merchant}
               onChange={(e) => setMerchant(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
             />
           </div>
         </div>
 
         {suggestedCategory && (
-          <div className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between text-xs text-indigo-700">
+          <div className="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-100 dark:border-cyan-800 flex items-center justify-between text-xs text-cyan-700 dark:text-cyan-300">
             <span className="flex items-center gap-1.5 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
               AI auto-detected category: <strong className="font-bold">{suggestedCategory}</strong>
             </span>
           </div>
@@ -170,14 +170,14 @@ export const ExpenseModal = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Category</label>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Category</label>
             <select
               value={category}
               onChange={(e) => {
                 setCategory(e.target.value);
                 setSuggestedCategory(null);
               }}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -186,11 +186,11 @@ export const ExpenseModal = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Payment Method</label>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Payment Method</label>
             <select
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {PAYMENT_METHODS.map((pm) => (
                 <option key={pm} value={pm}>{pm}</option>
@@ -201,51 +201,51 @@ export const ExpenseModal = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Transaction Date</label>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Transaction Date</label>
             <input
               type="date"
               required
               value={expenseDate}
               onChange={(e) => setExpenseDate(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Subcategory (Optional)</label>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Subcategory (Optional)</label>
             <input
               type="text"
               placeholder="e.g. Food Delivery, Fuel"
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">Description / Notes</label>
+          <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Description / Notes</label>
           <input
             type="text"
             placeholder="e.g. Lunch with team after project milestone"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 disabled:opacity-50 inline-flex items-center gap-2"
+            className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition shadow-md shadow-indigo-600/20 disabled:opacity-50 inline-flex items-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             <span>{expenseToEdit ? 'Save Changes' : 'Record Expense'}</span>

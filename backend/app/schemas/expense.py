@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Any, Dict
 from datetime import date, datetime
 
@@ -27,13 +27,12 @@ class ExpenseUpdate(BaseModel):
     expense_date: Optional[date] = None
 
 class ExpenseResponse(ExpenseBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class NaturalLanguageInput(BaseModel):
     text: str = Field(..., min_length=2, description="Natural language description of the expense")

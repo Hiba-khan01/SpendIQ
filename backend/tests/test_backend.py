@@ -37,7 +37,8 @@ def test_auth_and_user_flows():
     assert me_data["name"] == "Alex Sharma"
 
     # 3. Test Register New User
-    test_email = f"tester_{date.today().isoformat()}@spendiq.app"
+    import uuid
+    test_email = f"tester_{uuid.uuid4().hex[:8]}@spendiq.app"
     reg_resp = client.post("/api/auth/register", json={
         "name": "Test User",
         "email": test_email,

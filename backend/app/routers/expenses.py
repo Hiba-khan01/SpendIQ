@@ -230,11 +230,11 @@ async def scan_receipt(
         f.write(contents)
 
     # Run OCR
-    raw_ocr_text = ocr_service.extract_text_from_image(saved_path)
+    ocr_result = ocr_service.extract_text_from_image(saved_path)
 
     # AI structured extraction
     relative_image_path = f"/uploads/{file_id}"
-    extracted_data = ai_service.extract_receipt_data(raw_ocr_text, relative_image_path)
+    extracted_data = ai_service.extract_receipt_data(ocr_result, relative_image_path)
 
     return ReceiptScanResponse(**extracted_data)
 

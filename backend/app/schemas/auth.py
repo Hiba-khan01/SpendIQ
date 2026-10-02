@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -14,22 +14,20 @@ class UserLogin(BaseModel):
     password: str
 
 class UserSettingsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     currency: str
     monthly_income: float
 
-    class Config:
-        from_attributes = True
-
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     email: str
     created_at: datetime
     currency: str = "INR"
     monthly_income: float = 75000.0
-
-    class Config:
-        from_attributes = True
 
 class Token(BaseModel):
     access_token: str

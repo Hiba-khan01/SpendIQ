@@ -9,7 +9,6 @@ import {
   Plus,
   ScanLine,
   Sparkles,
-  RotateCw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { analyticsService, insightService, budgetService } from '../services';
@@ -98,10 +97,10 @@ export const Dashboard = () => {
       {/* Greeting Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Good day, {user?.name || 'Investor'} 👋
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Here is your spending intelligence and budget performance overview.
           </p>
         </div>
@@ -110,15 +109,15 @@ export const Dashboard = () => {
         <div className="flex items-center gap-2.5">
           <Link
             to="/expenses/scan"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition shadow-xs"
           >
-            <ScanLine className="w-4 h-4 text-emerald-600" />
+            <ScanLine className="w-4 h-4 text-cyan-500" />
             <span>Scan Receipt</span>
           </Link>
 
           <button
             onClick={() => setIsExpenseModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition shadow-md shadow-indigo-600/20"
           >
             <Plus className="w-4 h-4" />
             <span>Add Expense</span>
@@ -165,25 +164,26 @@ export const Dashboard = () => {
       {/* Visual Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Spending Trend Area Chart (2 cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-card">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-card">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">Spending & Savings Trends</h3>
-              <p className="text-[11px] text-slate-400">Monthly income vs expenses comparison</p>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Spending & Savings Trends</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">Monthly income vs expenses comparison</p>
             </div>
           </div>
           <SpendingTrendChart data={trends?.monthly_history || []} currency={currency} />
         </div>
 
         {/* Category Breakdown Donut Chart (1 col) */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-card flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-card flex flex-col justify-between">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">Category Breakdown</h3>
-            <p className="text-[11px] text-slate-400 mb-4">Spending allocation this month</p>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1">Category Breakdown</h3>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-4">Spending allocation this month</p>
             <CategoryDonutChart
               data={categories}
               currency={currency}
               totalSpent={summary?.total_expenses || 0}
+              layout="vertical"
             />
           </div>
         </div>
@@ -192,7 +192,7 @@ export const Dashboard = () => {
       {/* Bottom Grid: AI Insights Widget + Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* AI Insights Widget */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-card">
+        <div className="bg-white dark:bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-card">
           <AIInsightsWidget
             insights={insights}
             onRefresh={handleRefreshInsights}
@@ -201,15 +201,15 @@ export const Dashboard = () => {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-card">
+        <div className="bg-white dark:bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-card">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">Recent Transactions</h3>
-              <p className="text-[11px] text-slate-400">Latest activity across payment methods</p>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Transactions</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">Latest activity across payment methods</p>
             </div>
             <Link
               to="/expenses/add"
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+              className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
             >
               + Quick Add
             </Link>

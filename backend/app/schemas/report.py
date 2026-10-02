@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -7,6 +7,8 @@ class MonthlyReportGenerateRequest(BaseModel):
     year: int
 
 class MonthlyReportResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: Optional[int] = None
     month: int
     year: int
@@ -22,6 +24,3 @@ class MonthlyReportResponse(BaseModel):
     top_expenses: List[Dict[str, Any]] = []
     recommendations: List[str] = []
     created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True

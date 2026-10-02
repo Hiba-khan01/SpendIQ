@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, TrendingUp, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Sparkles, ArrowRight, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 
 export const AIInsightsWidget = ({ insights = [], onRefresh, refreshing = false }) => {
   if (!insights || insights.length === 0) {
     return (
-      <div className="py-6 text-center text-slate-400 text-xs">
+      <div className="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
         No active spending insights yet.
       </div>
     );
@@ -14,37 +14,37 @@ export const AIInsightsWidget = ({ insights = [], onRefresh, refreshing = false 
   const getSeverityStyle = (sev) => {
     if (sev === 'warning' || sev === 'high') {
       return {
-        card: 'bg-amber-50/70 border-amber-200/80 text-amber-900',
-        badge: 'bg-amber-100 text-amber-800 border-amber-200',
-        icon: <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+        card: 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/50 text-amber-900 dark:text-amber-200',
+        badge: 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+        icon: <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
       };
     }
     if (sev === 'success') {
       return {
-        card: 'bg-emerald-50/70 border-emerald-200/80 text-emerald-900',
-        badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-        icon: <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+        card: 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200',
+        badge: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+        icon: <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
       };
     }
     return {
-      card: 'bg-indigo-50/70 border-indigo-200/80 text-indigo-900',
-      badge: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      icon: <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+      card: 'bg-cyan-50/70 dark:bg-cyan-950/30 border-cyan-200/80 dark:border-cyan-800/50 text-cyan-900 dark:text-cyan-200',
+      badge: 'bg-cyan-100 dark:bg-cyan-900/60 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+      icon: <Sparkles className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
     };
   };
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
           <span>AI Spending Observations</span>
         </div>
         {onRefresh && (
           <button
             onClick={onRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition disabled:opacity-50"
             title="Recalculate AI insights"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -81,7 +81,7 @@ export const AIInsightsWidget = ({ insights = [], onRefresh, refreshing = false 
       <div className="pt-2 text-center">
         <Link
           to="/insights"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
         >
           View all insights & recommendations
           <ArrowRight className="w-3.5 h-3.5" />

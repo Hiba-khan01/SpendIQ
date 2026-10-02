@@ -14,7 +14,7 @@ import { formatCurrency } from '../../utils/formatters';
 const CustomTooltip = ({ active, payload, label, currency }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-700 text-xs">
+      <div className="bg-slate-900 dark:bg-slate-950 text-white p-3 rounded-xl shadow-xl border border-slate-700 dark:border-slate-800 text-xs">
         <p className="font-bold text-slate-200 mb-1.5">{label}</p>
         {payload.map((entry, index) => (
           <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-0.5">
@@ -36,7 +36,7 @@ const CustomTooltip = ({ active, payload, label, currency }) => {
 export const SpendingTrendChart = ({ data = [], currency = 'INR' }) => {
   if (!data || data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
+      <div className="h-64 flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">
         No historical trend data available yet.
       </div>
     );
@@ -48,29 +48,29 @@ export const SpendingTrendChart = ({ data = [], currency = 'INR' }) => {
         <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2} />
+              <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.25} />
               <stop offset="95%" stopColor="#4F46E5" stopOpacity={0.0} />
             </linearGradient>
             <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#EF4444" stopOpacity={0.2} />
+              <stop offset="5%" stopColor="#EF4444" stopOpacity={0.25} />
               <stop offset="95%" stopColor="#EF4444" stopOpacity={0.0} />
             </linearGradient>
             <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+              <stop offset="5%" stopColor="#10B981" stopOpacity={0.25} />
               <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
           <XAxis
             dataKey="month_name"
             tickLine={false}
             axisLine={false}
-            tick={{ fill: '#64748B', fontSize: 11 }}
+            tick={{ fill: '#94A3B8', fontSize: 11 }}
           />
           <YAxis
             tickLine={false}
             axisLine={false}
-            tick={{ fill: '#64748B', fontSize: 11 }}
+            tick={{ fill: '#94A3B8', fontSize: 11 }}
             tickFormatter={(value) => `₹${value >= 1000 ? `${Math.round(value / 1000)}k` : value}`}
           />
           <Tooltip content={<CustomTooltip currency={currency} />} />

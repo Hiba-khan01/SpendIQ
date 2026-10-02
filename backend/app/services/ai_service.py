@@ -3,7 +3,7 @@ import re
 import json
 import logging
 from datetime import date, datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from backend.app.config import settings
 from backend.app.utils.date_utils import parse_relative_date, get_month_name
 from backend.app.services.categorization_service import categorization_service
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class AIService:
     def __init__(self):
         self.api_key = settings.AI_API_KEY
+        self.ai_provider = settings.AI_PROVIDER
         self.prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
 
     def _load_prompt(self, filename: str) -> str:
@@ -25,12 +26,11 @@ class AIService:
     def extract_natural_language_expense(self, text: str) -> Dict[str, Any]:
         """
         Parses natural language expense text into structured JSON.
-        Rule 5 & 11: Never invent missing information. If amount is missing, flag it.
+        Rule: Never invent missing information. If amount is missing, flag it.
         """
         text_clean = text.strip()
         
         # 1. Check for missing amount
-        # Regex for currency/amount patterns: ₹650, Rs 650, Rs. 650, 650 rs, 650.50, INR 650, 650 rupees
         amount = None
         amount_patterns = [
             r'[₹$€£]\s*([\d,]+(?:\.\d{1,2})?)',
@@ -49,7 +49,7 @@ class AIService:
                 except ValueError:
                     pass
                     
-        # If still not found, try raw stand-alone numbers
+        # If still not found, try stand-alone numbers
         if amount is None:
             m = re.search(r'\b(\d+(?:\.\d{1,2})?)\b', text_clean)
             if m:
@@ -64,7 +64,6 @@ class AIService:
 
         # 2. Extract Merchant & Description
         merchant = None
-        description = None
         
         # Check known popular merchants
         merchants_list = [
@@ -81,9 +80,9 @@ class AIService:
                 merchant = m_cand
                 break
 
-        # Fallback merchant extraction: "at <Merchant>", "on <Merchant>", "from <Merchant>"
+        # Fallback merchant extraction: "at <Merchant>", "from <Merchant>"
         if not merchant:
-            m_match = re.search(r'\b(?:at|from|to|with)\s+([A-Z][a-zA-Z0-9\s&\'\.-]{2,20})', text)
+            m_match = re.search(r'\b(?:at|from|to|with)\s+([A-Z][a-zA-Z0-9\s&\'\.-]{2,25})', text)
             if m_match:
                 merchant = m_match.group(1).strip()
 
@@ -106,7 +105,6 @@ class AIService:
         # Extract Category using ML + keywords
         cat, conf, _ = categorization_service.predict_category(text_clean)
         
-        # Subcategory mapping
         subcategory_map = {
             "Food": "Dining / Food Delivery",
             "Groceries": "Daily Needs",
@@ -125,8 +123,6 @@ class AIService:
         if not merchant:
             merchant = cat if cat != "Other" else "General Store"
 
-        # Build clean description
-        # e.g. "dinner at Swiggy" -> "Dinner"
         desc_match = re.search(r'\b(?:on|for)\s+([a-zA-Z\s]{3,30}?)(?:\s+at|\s+yesterday|\s+today|\s+using|\s+via|\s+with|$)', text_clean, re.IGNORECASE)
         if desc_match:
             description = desc_match.group(1).strip().capitalize()
@@ -149,103 +145,259 @@ class AIService:
             "raw_text": text
         }
 
-    def extract_receipt_data(self, ocr_text: str, image_path: Optional[str] = None) -> Dict[str, Any]:
+    def extract_receipt_data(
+        self,
+        ocr_input: Union[str, Dict[str, Any]],
+        image_path: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Extracts structured receipt information from OCR text.
+        Extracts structured receipt information from OCR text with strict validation.
+        Validates line item totals against grand total to ensure logical consistency.
         """
-        if not ocr_text or len(ocr_text.strip()) < 5:
+        # Unpack input
+        if isinstance(ocr_input, dict):
+            raw_text = ocr_input.get("raw_text", "")
+            lines = ocr_input.get("lines", [])
+        else:
+            raw_text = str(ocr_input or "")
+            lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
+
+        if not raw_text or len(raw_text.strip()) < 5:
+            logger.warning(f"Receipt scan failed: OCR returned empty or insufficient text (<5 chars).")
             return {
                 "merchant": None,
                 "expense_date": date.today().isoformat(),
                 "amount": None,
-                "category": "Food",
+                "category": "Other",
                 "payment_method": "Card",
                 "confidence_score": 0.0,
                 "items": [],
-                "raw_text": ocr_text or "",
+                "raw_text": raw_text or "",
                 "receipt_image_path": image_path,
                 "is_readable": False,
                 "error_message": "We couldn't read this receipt clearly. Try a clearer image."
             }
 
-        lines = [line.strip() for line in ocr_text.split("\n") if line.strip()]
-        
-        # 1. Merchant candidate: usually first 1-3 non-empty lines
-        merchant = "Retail Store"
-        for line in lines[:3]:
-            # skip generic words like INVOICE, RECEIPT, TAX
-            if not re.search(r'^(tax|invoice|receipt|bill|gst|welcome|date)', line, re.IGNORECASE) and len(line) >= 3:
-                merchant = line
+        # Filter and clean lines
+        clean_lines = [l.strip() for l in lines if l and len(l.strip()) >= 2]
+        if not clean_lines:
+            clean_lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
+
+        # ----------------------------------------------------
+        # 1. MERCHANT NAME EXTRACTION
+        # ----------------------------------------------------
+        merchant = None
+        noise_line_patterns = [
+            r'^(tax\s*invoice|invoice|receipt|bill|gst|gstin|welcome|date|time|store\s*#|order\s*#|table\s*#|pos|terminal)',
+            r'^\d+\s+[a-zA-Z\s]+(road|street|nagar|lane|layout|marg|ave|avenue|bengaluru|bangalore|mumbai|delhi|hyderabad|chennai)',
+            r'^\+?\d{10,12}$',
+            r'^[=\-_*#~]{3,}$',
+            r'^\d{6}$',
+            r'^(thank\s*you|visit\s*again|customer\s*copy|merchant\s*copy)'
+        ]
+
+        for line in clean_lines[:6]:
+            is_noise = any(re.search(pat, line, re.IGNORECASE) for pat in noise_line_patterns)
+            if not is_noise and len(line) >= 3 and not re.search(r'^\d', line):
+                # Clean up trailing noise
+                cleaned_m = re.sub(r'[\-_*#:].*$', '', line).strip()
+                if len(cleaned_m) >= 3:
+                    merchant = cleaned_m
+                    break
+
+        if not merchant and clean_lines:
+            merchant = clean_lines[0]
+
+        # ----------------------------------------------------
+        # 2. DATE EXTRACTION
+        # ----------------------------------------------------
+        expense_date = None
+        # Try YYYY-MM-DD
+        m_date = re.search(r'\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b', raw_text)
+        if m_date:
+            try:
+                y, m, d = int(m_date.group(1)), int(m_date.group(2)), int(m_date.group(3))
+                if 1 <= m <= 12 and 1 <= d <= 31:
+                    expense_date = f"{y:04d}-{m:02d}-{d:02d}"
+            except ValueError:
+                pass
+
+        # Try DD-MM-YYYY or DD/MM/YYYY
+        if not expense_date:
+            m_date2 = re.search(r'\b(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})\b', raw_text)
+            if m_date2:
+                try:
+                    d, m, y = int(m_date2.group(1)), int(m_date2.group(2)), int(m_date2.group(3))
+                    if 1 <= m <= 12 and 1 <= d <= 31:
+                        expense_date = f"{y:04d}-{m:02d}-{d:02d}"
+                except ValueError:
+                    pass
+
+        if not expense_date:
+            parsed_dt = parse_relative_date(raw_text, date.today())
+            expense_date = parsed_dt.isoformat() if parsed_dt else date.today().isoformat()
+
+        # ----------------------------------------------------
+        # 3. LINE ITEMS EXTRACTION
+        # ----------------------------------------------------
+        items = []
+        non_item_keywords = r'(?i)\b(subtotal|sub-total|grand\s*total|total\s*amount|final\s*total|net\s*amount|total\s*payable|amount\s*payable|total\s*due|amount\s*due|balance\s*due|total|tax|gst|cgst|sgst|vat|discount|round\s*off|cash|card|upi|change|balance|invoice|bill\s*no|date|time|table|tel|phone|store)\b'
+
+        for line in clean_lines:
+            # Check pattern: Item Name + Price (e.g. "Gourmet Sandwich Rs 320.00" or "Pizza ₹499")
+            m_item = re.search(r'^([a-zA-Z0-9\s&\'\.\(\)\-\+]{2,45}?)\s+(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{2})?)$', line, re.IGNORECASE)
+            if m_item:
+                name = m_item.group(1).strip()
+                price_str = m_item.group(2).replace(",", "")
+                # Skip if name is a total, tax, or receipt header
+                if not re.search(non_item_keywords, name) and not re.search(r'^[=\-_*#]{2,}$', name):
+                    try:
+                        price_val = float(price_str)
+                        if 1.0 <= price_val <= 500000.0 and len(name) >= 2:
+                            items.append({"name": name, "price": price_val, "quantity": 1})
+                    except ValueError:
+                        pass
+
+        line_items_sum = round(sum(i["price"] * i.get("quantity", 1) for i in items), 2)
+
+        # ----------------------------------------------------
+        # 4. TOTAL AMOUNT EXTRACTION & LOGICAL VALIDATION
+        # ----------------------------------------------------
+        # Pattern set 1: Explicit Grand Total / Total Amount lines
+        grand_total_patterns = [
+            r'(?i)\b(?:grand\s*total|total\s*amount|final\s*total|net\s*amount|total\s*payable|amount\s*payable|net\s*payable|bill\s*amount)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)',
+            r'(?i)\b(?:total|net\s*total)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)',
+        ]
+
+        extracted_total = None
+        matched_total_line = None
+
+        for pat in grand_total_patterns:
+            for idx, line in enumerate(clean_lines):
+                m = re.search(pat, line)
+                if m:
+                    try:
+                        cand = float(m.group(1).replace(",", ""))
+                        # Guard against year / invoice numbers / tiny noise
+                        if cand > 0 and cand != 2026 and cand != 2025:
+                            extracted_total = cand
+                            matched_total_line = line
+                            break
+                    except ValueError:
+                        pass
+                # Also check if the price is on the very next line after "TOTAL AMOUNT"
+                elif re.search(r'(?i)^\s*(?:grand\s*total|total\s*amount|total)\s*[:=]?\s*$', line) and idx + 1 < len(clean_lines):
+                    next_line = clean_lines[idx + 1]
+                    m_next = re.search(r'(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)', next_line, re.IGNORECASE)
+                    if m_next:
+                        try:
+                            cand = float(m_next.group(1).replace(",", ""))
+                            if cand > 0 and cand != 2026:
+                                extracted_total = cand
+                                matched_total_line = f"{line} -> {next_line}"
+                                break
+                        except ValueError:
+                            pass
+            if extracted_total is not None:
                 break
 
-        # 2. Extract Total Amount
-        amount = None
-        total_pattern = r'(?:total|grand total|net amount|amount due|final total|balance due)\s*[:=]?\s*[₹$€£]?\s*([\d,]+(?:\.\d{1,2})?)'
-        for line in lines:
-            m = re.search(total_pattern, line, re.IGNORECASE)
-            if m:
+        # Subtotal fallback if grand total was not matched
+        subtotal = None
+        for line in clean_lines:
+            m_sub = re.search(r'(?i)\b(?:subtotal|sub-total)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)', line)
+            if m_sub:
                 try:
-                    amount = float(m.group(1).replace(",", ""))
+                    subtotal = float(m_sub.group(1).replace(",", ""))
                     break
                 except ValueError:
                     pass
 
-        # Fallback: find highest numerical value on lines with prices
-        if amount is None:
-            all_numbers = []
-            for line in lines:
-                nums = re.findall(r'[₹$€£]?\s*(\d{2,6}(?:\.\d{1,2})?)', line)
-                for n in nums:
-                    try:
-                        all_numbers.append(float(n))
-                    except ValueError:
-                        pass
-            if all_numbers:
-                amount = max(all_numbers)
+        # ----------------------------------------------------
+        # CONSISTENCY CHECK & DISCREPANCY RESOLUTION
+        # ----------------------------------------------------
+        final_amount = None
+        consistency_status = "unverified"
 
-        # 3. Extract items
-        items = []
-        for line in lines:
-            # Look for item + price pattern, e.g. "Pizza 499.00" or "Garlic Bread ₹199"
-            item_match = re.search(r'^([a-zA-Z\s]{3,35})\s+.*?([₹$€£]?\s*\d+(?:\.\d{1,2})?)$', line)
-            if item_match:
-                item_name = item_match.group(1).strip()
-                # skip total lines
-                if not re.search(r'total|subtotal|tax|gst|change|cash|card|due', item_name, re.IGNORECASE):
-                    price_str = re.sub(r'[^\d.]', '', item_match.group(2))
-                    try:
-                        p_val = float(price_str)
-                        items.append({"name": item_name, "price": p_val, "quantity": 1})
-                    except ValueError:
-                        pass
+        if extracted_total is not None:
+            if items and line_items_sum > 0:
+                # Normal variation allow: items sum <= total <= items sum * 1.35 (taxes/service charge)
+                # or total <= items sum * 1.0 (discounts)
+                if 0.70 * line_items_sum <= extracted_total <= 1.50 * line_items_sum:
+                    final_amount = extracted_total
+                    consistency_status = "consistent_with_items"
+                else:
+                    # Wild discrepancy detected (e.g. extracted_total=84912 vs line_items_sum=650)
+                    logger.warning(
+                        f"Receipt Extraction Discrepancy: Extracted Grand Total ({extracted_total}) "
+                        f"does not match Line Items Sum ({line_items_sum}). Resolving to actual receipt total."
+                    )
+                    # Check if subtotal or line items sum matches a printed amount on receipt
+                    if subtotal and 0.70 * line_items_sum <= subtotal <= 1.50 * line_items_sum:
+                        final_amount = subtotal
+                        consistency_status = "corrected_to_subtotal"
+                    else:
+                        final_amount = line_items_sum
+                        consistency_status = "corrected_to_line_items_sum"
+            else:
+                final_amount = extracted_total
+                consistency_status = "total_only_no_items"
+        elif subtotal is not None:
+            final_amount = subtotal
+            consistency_status = "used_subtotal"
+        elif items and line_items_sum > 0:
+            final_amount = line_items_sum
+            consistency_status = "used_line_items_sum"
 
-        # 4. Extract Date
-        expense_date = parse_relative_date(ocr_text, date.today())
-
-        # 5. Extract Category
-        cat, conf, _ = categorization_service.predict_category(f"{merchant} {ocr_text[:200]}")
-
-        # 6. Payment method
+        # ----------------------------------------------------
+        # 5. PAYMENT METHOD & CATEGORY
+        # ----------------------------------------------------
         payment_method = "Card"
-        if re.search(r'upi|phonepe|gpay|paytm', ocr_text, re.IGNORECASE):
+        if re.search(r'\b(upi|gpay|google\s*pay|phonepe|paytm)\b', raw_text, re.IGNORECASE):
             payment_method = "UPI"
-        elif re.search(r'cash', ocr_text, re.IGNORECASE):
-            payment_method = "Cash"
-        elif re.search(r'credit card|visa|mastercard|amex', ocr_text, re.IGNORECASE):
+        elif re.search(r'\b(credit\s*card|visa|mastercard|amex)\b', raw_text, re.IGNORECASE):
             payment_method = "Credit Card"
+        elif re.search(r'\b(debit\s*card)\b', raw_text, re.IGNORECASE):
+            payment_method = "Debit Card"
+        elif re.search(r'\b(cash)\b', raw_text, re.IGNORECASE):
+            payment_method = "Cash"
+        elif re.search(r'\b(net\s*banking|bank\s*transfer)\b', raw_text, re.IGNORECASE):
+            payment_method = "Bank Transfer"
+
+        # Predict Category
+        merchant_for_cat = merchant or "General"
+        items_text = " ".join(i["name"] for i in items)
+        cat, conf, _ = categorization_service.predict_category(f"{merchant_for_cat} {items_text} {raw_text[:200]}")
+
+        is_readable = final_amount is not None and final_amount > 0 and merchant is not None
+        confidence = 0.95 if (is_readable and consistency_status in ["consistent_with_items", "total_only_no_items"]) else (0.80 if is_readable else 0.30)
+
+        # ----------------------------------------------------
+        # 6. DETAILED LOGGING FOR DEVELOPMENT / TRACING
+        # ----------------------------------------------------
+        logger.info(f"=== RECEIPT SCAN REPORT ===")
+        logger.info(f"Image Path: {image_path}")
+        logger.info(f"Extracted Merchant: '{merchant}'")
+        logger.info(f"Extracted Date: {expense_date}")
+        logger.info(f"Detected Line Items ({len(items)}): {items}")
+        logger.info(f"Line Items Sum: ₹{line_items_sum}")
+        logger.info(f"Matched Total Line: '{matched_total_line}', Raw Total: {extracted_total}")
+        logger.info(f"Final Resolved Total: ₹{final_amount} (Status: {consistency_status})")
+        logger.info(f"Category: {cat}, Payment Method: {payment_method}")
+        logger.info(f"Confidence: {confidence}, is_readable: {is_readable}")
+        logger.info(f"===========================")
 
         return {
             "merchant": merchant,
-            "expense_date": expense_date.isoformat(),
-            "amount": amount,
+            "expense_date": expense_date,
+            "amount": final_amount,
             "category": cat,
             "payment_method": payment_method,
-            "confidence_score": round(max(0.70, conf), 2),
+            "confidence_score": round(confidence, 2),
             "items": items,
-            "raw_text": ocr_text,
+            "raw_text": raw_text,
             "receipt_image_path": image_path,
-            "is_readable": amount is not None and amount > 0,
-            "error_message": None if (amount is not None and amount > 0) else "Amount could not be detected with high confidence. Please verify before saving."
+            "is_readable": is_readable,
+            "error_message": None if is_readable else "We couldn't read all details with high confidence. Please verify fields before saving."
         }
 
     def generate_spending_insights(self, stats: Dict[str, Any]) -> List[Dict[str, Any]]:

@@ -88,47 +88,47 @@ export const BudgetModal = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">Select Category</label>
+          <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Category</label>
           <select
             disabled={!!budgetToEdit}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
           >
             {CATEGORIES.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id} className="dark:bg-slate-800">{c.name}</option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">
+          <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
             Monthly Spending Limit ({currency}) <span className="text-rose-500">*</span>
           </label>
           <input
             type="number"
-            step="500"
-            min="100"
+            step="any"
+            min="1"
             required
             placeholder="e.g. 5000"
             value={monthlyLimit}
             onChange={(e) => setMonthlyLimit(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 disabled:opacity-50 inline-flex items-center gap-2"
+            className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 dark:shadow-none disabled:opacity-50 inline-flex items-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             <span>{budgetToEdit ? 'Save Budget' : 'Create Budget'}</span>

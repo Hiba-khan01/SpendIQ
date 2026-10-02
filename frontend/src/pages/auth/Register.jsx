@@ -132,7 +132,7 @@ export const Register = () => {
               <input
                 type="number"
                 min="0"
-                step="1000"
+                step="any"
                 value={monthlyIncome}
                 onChange={(e) => setMonthlyIncome(e.target.value)}
                 className="w-full pl-8 pr-3 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"

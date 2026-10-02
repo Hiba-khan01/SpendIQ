@@ -112,14 +112,14 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-card">
-      <div className="flex items-center gap-2.5 mb-2 text-indigo-600">
-        <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+    <div className="bg-white dark:bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-card transition-colors">
+      <div className="flex items-center gap-2.5 mb-2 text-indigo-600 dark:text-indigo-400">
+        <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center">
           <Sparkles className="w-4 h-4" />
         </div>
-        <h3 className="text-base sm:text-lg font-bold text-slate-900">Tell SpendIQ what you spent</h3>
+        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Tell SpendIQ what you spent</h3>
       </div>
-      <p className="text-xs text-slate-500 mb-5">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
         Type in plain natural English or Hinglish. SpendIQ AI will instantly extract the merchant, amount, category, date, and payment method.
       </p>
 
@@ -137,12 +137,12 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="e.g. Spent ₹650 on dinner at Swiggy yesterday using UPI..."
-            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+            className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition"
           />
           <button
             type="submit"
             disabled={loading || !inputText.trim()}
-            className="absolute bottom-3.5 right-3.5 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 disabled:opacity-40"
+            className="absolute bottom-3.5 right-3.5 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 dark:shadow-none disabled:opacity-40"
           >
             {loading ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -157,7 +157,7 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
 
         {/* Sample Prompt Pills */}
         <div>
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Try examples:</p>
+          <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Try examples:</p>
           <div className="flex flex-wrap gap-2">
             {samplePrompts.map((p, i) => (
               <button
@@ -167,7 +167,7 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
                   setInputText(p);
                   handleParse(p);
                 }}
-                className="text-left text-xs bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 transition"
+                className="text-left text-xs bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition"
               >
                 "{p}"
               </button>
@@ -178,21 +178,21 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
 
       {/* AI Extraction Confirmation Screen */}
       {parsedData && (
-        <div className="mt-6 pt-6 border-t border-slate-200 animate-in fade-in zoom-in-95 duration-200">
-          <div className="p-5 sm:p-6 rounded-2xl bg-indigo-50/50 border border-indigo-100 shadow-sm">
+        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-5 sm:p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-indigo-600" />
-                <h4 className="text-sm font-bold text-slate-900">AI Detected Transaction</h4>
+                <CheckCircle2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">AI Detected Transaction</h4>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
                 Confidence: {Math.round((parsedData.confidence_score || 0.95) * 100)}%
               </span>
             </div>
 
             {!parsedData.is_complete && (
-              <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Some required details were missing from your text (e.g. {parsedData.missing_fields?.join(', ')}). Please fill them in below before saving.</span>
               </div>
             )}
@@ -201,29 +201,29 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
               /* Structured Confirmation View */
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Amount</span>
-                    <p className="text-lg font-extrabold text-slate-900">{formatCurrency(parsedData.amount, currency)}</p>
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Amount</span>
+                    <p className="text-lg font-extrabold text-slate-900 dark:text-white">{formatCurrency(parsedData.amount, currency)}</p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Merchant</span>
-                    <p className="text-sm font-bold text-slate-900 truncate">{parsedData.merchant || 'General'}</p>
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Merchant</span>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{parsedData.merchant || 'General'}</p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Category</span>
-                    <p className="text-sm font-bold text-indigo-600 truncate">{parsedData.category}</p>
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Category</span>
+                    <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 truncate">{parsedData.category}</p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Date</span>
-                    <p className="text-sm font-semibold text-slate-800">{formatDate(parsedData.expense_date)}</p>
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Date</span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{formatDate(parsedData.expense_date)}</p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Payment Method</span>
-                    <p className="text-sm font-semibold text-slate-800">{parsedData.payment_method}</p>
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Payment Method</span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{parsedData.payment_method}</p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Description</span>
-                    <p className="text-sm font-semibold text-slate-800 truncate">{parsedData.description || 'N/A'}</p>
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Description</span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{parsedData.description || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -232,14 +232,14 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
                   <button
                     type="button"
                     onClick={() => setParsedData(null)}
-                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition"
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-indigo-600 bg-white border border-indigo-200 hover:bg-indigo-50 rounded-xl transition"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl transition"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     Edit Fields
@@ -248,7 +248,7 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
                     type="button"
                     onClick={handleConfirmSave}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 dark:shadow-none disabled:opacity-50"
                   >
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                     <span>Confirm & Save</span>
@@ -260,7 +260,7 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Amount ({currency}) *</label>
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Amount ({currency}) *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -268,63 +268,63 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
                       value={editForm.amount}
                       onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
                       placeholder="e.g. 650"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-sm"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-sm text-slate-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Merchant *</label>
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Merchant *</label>
                     <input
                       type="text"
                       required
                       value={editForm.merchant}
                       onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })}
                       placeholder="e.g. Swiggy"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Category</label>
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Category</label>
                     <select
                       value={editForm.category}
                       onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white"
                     >
                       {CATEGORIES.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id} className="dark:bg-slate-800">{c.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Payment Method</label>
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Payment Method</label>
                     <select
                       value={editForm.payment_method}
                       onChange={(e) => setEditForm({ ...editForm, payment_method: e.target.value })}
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white"
                     >
-                      <option value="UPI">UPI</option>
-                      <option value="Credit Card">Credit Card</option>
-                      <option value="Debit Card">Debit Card</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="UPI" className="dark:bg-slate-800">UPI</option>
+                      <option value="Credit Card" className="dark:bg-slate-800">Credit Card</option>
+                      <option value="Debit Card" className="dark:bg-slate-800">Debit Card</option>
+                      <option value="Cash" className="dark:bg-slate-800">Cash</option>
+                      <option value="Bank Transfer" className="dark:bg-slate-800">Bank Transfer</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Date</label>
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Date</label>
                     <input
                       type="date"
                       value={editForm.expense_date}
                       onChange={(e) => setEditForm({ ...editForm, expense_date: e.target.value })}
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Description</label>
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Description</label>
                     <input
                       type="text"
                       value={editForm.description}
                       onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                       placeholder="e.g. Dinner"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -333,7 +333,7 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                   >
                     Back to Summary
                   </button>
@@ -341,7 +341,7 @@ export const NaturalLanguageInput = ({ onExpenseSaved, currency = 'INR' }) => {
                     type="button"
                     onClick={handleConfirmSave}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200"
+                    className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 dark:shadow-none"
                   >
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                     <span>Save Edited Expense</span>

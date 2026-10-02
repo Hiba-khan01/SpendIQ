@@ -76,37 +76,37 @@ export const AddExpense = () => {
         <div>
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-2 transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 mb-2 transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back</span>
           </button>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Record Expense</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Record Expense</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Choose your preferred entry method: AI natural language, manual entry, or receipt scanner.
           </p>
         </div>
 
         <Link
           to="/expenses/scan"
-          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-xs self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 rounded-xl transition shadow-xs self-start sm:self-auto"
         >
-          <ScanLine className="w-4 h-4 text-emerald-600" />
+          <ScanLine className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span>Scan Paper Receipt</span>
         </Link>
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex p-1.5 bg-slate-200/70 rounded-2xl max-w-md">
+      <div className="flex p-1.5 bg-slate-200/70 dark:bg-slate-800 rounded-2xl max-w-md">
         <button
           onClick={() => setActiveTab('natural_language')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${
             activeTab === 'natural_language'
-              ? 'bg-white text-indigo-700 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Sparkles className="w-4 h-4 text-indigo-600" />
+          <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           <span>AI Natural Language</span>
         </button>
 
@@ -114,11 +114,11 @@ export const AddExpense = () => {
           onClick={() => setActiveTab('manual')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${
             activeTab === 'manual'
-              ? 'bg-white text-indigo-700 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Edit3 className="w-4 h-4 text-slate-500" />
+          <Edit3 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
           <span>Manual Form</span>
         </button>
       </div>
@@ -133,11 +133,11 @@ export const AddExpense = () => {
 
       {/* Tab 2: Manual Form Entry */}
       {activeTab === 'manual' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-card">
+        <div className="bg-white dark:bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-card transition-colors">
           <form onSubmit={handleManualSubmit} className="space-y-4 text-xs sm:text-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Amount ({currency}) <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -147,12 +147,12 @@ export const AddExpense = () => {
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-extrabold text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-extrabold text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Merchant / Payee <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -161,34 +161,34 @@ export const AddExpense = () => {
                   placeholder="e.g. Swiggy, Uber, DMart, Amazon"
                   value={merchant}
                   onChange={(e) => setMerchant(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Category</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 >
                   {CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id} className="dark:bg-slate-800">{c.name}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Payment Method</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Payment Method</label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 >
                   {PAYMENT_METHODS.map((pm) => (
-                    <option key={pm} value={pm}>{pm}</option>
+                    <option key={pm} value={pm} className="dark:bg-slate-800">{pm}</option>
                   ))}
                 </select>
               </div>
@@ -196,51 +196,51 @@ export const AddExpense = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Expense Date</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Expense Date</label>
                 <input
                   type="date"
                   required
                   value={expenseDate}
                   onChange={(e) => setExpenseDate(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Subcategory (Optional)</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Subcategory (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Dining Out, Electronics, Fuel"
                   value={subcategory}
                   onChange={(e) => setSubcategory(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Description / Notes</label>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Description / Notes</label>
               <textarea
                 rows={2}
                 placeholder="e.g. Birthday dinner with family"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => navigate('/expenses')}
-                className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800"
+                className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 disabled:opacity-50 inline-flex items-center gap-2"
+                className="px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 dark:shadow-none disabled:opacity-50 inline-flex items-center gap-2"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 <span>Save Expense</span>

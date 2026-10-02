@@ -127,8 +127,8 @@ export const Expenses = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Expense History</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Expense History</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Manage, filter, and analyze all your recorded personal expenses ({total} total).
           </p>
         </div>
@@ -136,17 +136,17 @@ export const Expenses = () => {
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
             to="/expenses/scan"
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 rounded-xl transition shadow-xs"
           >
-            <ScanLine className="w-4 h-4 text-emerald-600" />
+            <ScanLine className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Scan Receipt</span>
           </Link>
 
           <Link
             to="/expenses/add"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-xl transition shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl transition shadow-xs"
           >
-            <Sparkles className="w-4 h-4 text-indigo-600" />
+            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>AI Natural Entry</span>
           </Link>
 
@@ -155,7 +155,7 @@ export const Expenses = () => {
               setSelectedExpense(null);
               setIsModalOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-md shadow-indigo-200 dark:shadow-none"
           >
             <Plus className="w-4 h-4" />
             <span>Add Expense</span>
@@ -239,20 +239,20 @@ export const Expenses = () => {
         maxWidth="max-w-md"
       >
         <div className="space-y-4">
-          <p className="text-xs sm:text-sm text-slate-600">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
             Are you sure you want to delete this expense record? Your budget and monthly analytics will update automatically.
           </p>
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => setDeleteExpenseId(null)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             >
               Cancel
             </button>
             <button
               onClick={confirmDelete}
               disabled={deleting}
-              className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200 inline-flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200 dark:shadow-none inline-flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>{deleting ? 'Deleting...' : 'Delete Expense'}</span>

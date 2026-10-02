@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -15,6 +15,8 @@ class BudgetUpdate(BaseModel):
     monthly_limit: float = Field(..., gt=0)
 
 class BudgetResponse(BudgetBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     spent: float = 0.0
@@ -23,6 +25,3 @@ class BudgetResponse(BudgetBase):
     status: str = "normal" # "normal", "warning" (>=80%), "over_budget" (>100%)
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True

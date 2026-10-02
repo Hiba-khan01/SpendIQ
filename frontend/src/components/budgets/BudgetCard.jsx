@@ -37,7 +37,7 @@ export const BudgetCard = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-card hover:shadow-card-hover transition-all duration-200 flex flex-col justify-between">
+    <div className="bg-white dark:bg-slate-900/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-card hover:shadow-card-hover transition-all duration-200 flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
@@ -52,8 +52,8 @@ export const BudgetCard = ({
               {budget.category ? budget.category.slice(0, 2).toUpperCase() : 'BG'}
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 text-sm">{budget.category}</h4>
-              <p className="text-[11px] text-slate-400">Monthly Allocation</p>
+              <h4 className="font-bold text-slate-900 dark:text-white text-sm">{budget.category}</h4>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">Monthly Allocation</p>
             </div>
           </div>
 
@@ -68,16 +68,16 @@ export const BudgetCard = ({
         {/* Progress Numbers */}
         <div className="my-3">
           <div className="flex items-baseline justify-between text-xs mb-1.5">
-            <span className="text-slate-500">
-              Spent <strong className="text-slate-900 font-bold">{formatCurrency(spent, currency)}</strong>
+            <span className="text-slate-500 dark:text-slate-400">
+              Spent <strong className="text-slate-900 dark:text-white font-bold">{formatCurrency(spent, currency)}</strong>
             </span>
-            <span className="text-slate-500">
-              Limit <strong className="text-slate-700 font-semibold">{formatCurrency(limit, currency)}</strong>
+            <span className="text-slate-500 dark:text-slate-400">
+              Limit <strong className="text-slate-700 dark:text-slate-300 font-semibold">{formatCurrency(limit, currency)}</strong>
             </span>
           </div>
 
           {/* Visual Progress Bar */}
-          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               className={`h-full ${progressColor} transition-all duration-500 rounded-full`}
               style={{ width: `${Math.min(percentage, 100)}%` }}
@@ -87,15 +87,15 @@ export const BudgetCard = ({
       </div>
 
       {/* Footer Details & Actions */}
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs mt-1">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs mt-1">
         <div>
           {isOver ? (
-            <span className="text-rose-600 font-bold">
+            <span className="text-rose-600 dark:text-rose-400 font-bold">
               +{formatCurrency(spent - limit, currency)} over
             </span>
           ) : (
-            <span className="text-slate-600 font-medium">
-              <strong className="text-emerald-600 font-bold">{formatCurrency(remaining, currency)}</strong> left ({100 - percentage}%)
+            <span className="text-slate-600 dark:text-slate-400 font-medium">
+              <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(remaining, currency)}</strong> left ({100 - percentage}%)
             </span>
           )}
         </div>
@@ -103,14 +103,14 @@ export const BudgetCard = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => onEdit(budget)}
-            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition"
+            className="p-1.5 text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
             title="Edit Budget Limit"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(budget.id)}
-            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+            className="p-1.5 text-slate-400 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition"
             title="Delete Budget"
           >
             <Trash2 className="w-3.5 h-3.5" />
