@@ -1,0 +1,104 @@
+text,category
+Swiggy order biryani lunch,Food
+Zomato dinner pizza delivery,Food
+Dominos farm fresh pizza and garlic bread,Food
+McDonalds burger combo meal,Food
+KFC fried chicken bucket and drink,Food
+Starbucks iced latte and croissant,Food
+Subway sub sandwich and cookie,Food
+Chai Point ginger tea and snacks,Food
+Haldirams thali and sweets,Food
+Burger King whopper meal,Food
+Pizza Hut cheese burst pizza,Food
+Dunkin Donuts coffee,Food
+Local cafe cappuccino and pasta,Food
+Lunch at office cafeteria,Food
+Dinner at barbecue nation with friends,Food
+Blinkit express milk eggs and bread,Groceries
+Zepto 10 min grocery delivery,Groceries
+Instamart fresh vegetables and fruits,Groceries
+BigBasket monthly household groceries,Groceries
+DMart supermarket provisions and oil,Groceries
+Reliance Fresh wheat flour rice pulses,Groceries
+Nature Basket organic butter and cheese,Groceries
+Local vegetable market tomatoes onions,Groceries
+Spencers daily grocery shopping,Groceries
+Supermarket snacks cereal juice,Groceries
+Grocery store oats and dry fruits,Groceries
+Uber cab ride to airport,Transport
+Ola auto ride to office,Transport
+Rapido bike taxi metro station,Transport
+Delhi Metro smart card recharge,Transport
+Mumbai local train ticket pass,Transport
+Shell petrol pump fuel refill car,Transport
+HPCL diesel fuel for vehicle,Transport
+Fastag toll plaza highway payment,Transport
+Flight boarding pass IndiGo airlines,Travel
+MakeMyTrip hotel booking Goa trip,Travel
+Cleartrip train ticket reservation IRCTC,Travel
+Yatra round trip flight tickets,Travel
+Airbnb weekend homestay resort,Travel
+Uber intercity taxi outstation,Travel
+Bus ticket booking RedBus,Travel
+Amazon India electronics earphones order,Shopping
+Flipkart festive sale clothes and shoes,Shopping
+Myntra trendy sneakers and jacket,Shopping
+Ajio formal shirts and jeans,Shopping
+Zara brand apparel and trousers,Shopping
+H&M casual t-shirts and hoodies,Shopping
+Croma electronics laptop charger,Shopping
+Reliance Digital smart tv accessories,Shopping
+Nykaa skin care moisturiser lipstick,Shopping
+IKEA home furniture study table,Shopping
+Decathlon sports badminton racket and shoes,Shopping
+BookMyShow cinema tickets IMAX movie,Entertainment
+PVR INOX multiplex pop corn and movie,Entertainment
+Gaming arcade zone tickets,Entertainment
+Live music concert festival pass,Entertainment
+Bowling alley weekend game,Entertainment
+Netflix 4k monthly streaming subscription,Subscriptions
+Spotify premium family music plan,Subscriptions
+Amazon Prime annual membership renewal,Subscriptions
+Disney Hotstar VIP subscription,Subscriptions
+YouTube Premium individual subscription,Subscriptions
+Apple iCloud storage 200GB plan,Subscriptions
+Google One cloud storage plan,Subscriptions
+ChatGPT Plus subscription OpenAI,Subscriptions
+PlayStation Plus monthly subscription,Subscriptions
+Medium membership subscription,Subscriptions
+Electricity bill payment BESCOM / Adani power,Bills
+Piped water supply municipal bill,Bills
+PNG piped gas bill payment,Bills
+Airtel broadband wifi fiber bill,Bills
+JioFiber monthly high speed internet bill,Bills
+Mobile postpaid phone bill recharge,Bills
+LPG cooking gas cylinder booking,Bills
+Apartment maintenance society charges,Bills
+Property tax municipal corporation,Bills
+Apollo Pharmacy medicines cough syrup,Healthcare
+Practo online doctor consultation fee,Healthcare
+Thyrocare full body blood test package,Healthcare
+1mg online pharmacy prescription drugs,Healthcare
+Dental clinic tooth cleaning filling,Healthcare
+Eye checkup and prescription eyeglasses Lenskart,Healthcare
+Hospital consultation fee specialist doctor,Healthcare
+Physiotherapy clinic session,Healthcare
+Health insurance premium payment Star Health,Healthcare
+Udemy python web development course,Education
+Coursera machine learning specialization,Education
+College semester tuition fee payment,Education
+School admission fee and books,Education
+Books purchase at bookstore reference guide,Education
+Skillshare annual learning pass,Education
+Certification exam voucher fee,Education
+Tuition classes monthly fee,Education
+ATM cash withdrawal,Other
+Charity donation temple foundation,Other
+Courier speed post delivery charge,Other
+Bank locker annual rent charge,Other
+Key maker lock repair service,Other
+General miscellaneous cash expense,Other
+Dry cleaning and laundry service,Other
+Home painter and plumbing handyman repair,Other
+Dog food and pet grooming clinic,Other
+Car wash and servicing detailer,Other
