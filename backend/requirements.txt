@@ -20,6 +20,6 @@ reportlab>=4.1.0
 requests>=2.31.0
 pytest>=8.0.0
 httpx>=0.27.0
-winocr>=0.0.15
+winocr>=0.0.15; sys_platform == 'win32'
 pytesseract>=0.3.10
 email-validator>=2.3.0
