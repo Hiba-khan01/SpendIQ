@@ -59,11 +59,15 @@ class ReceiptScanResponse(BaseModel):
     merchant: Optional[str] = None
     expense_date: Optional[str] = None
     amount: Optional[float] = None
-    category: Optional[str] = "Food"
-    payment_method: Optional[str] = "Card"
+    subtotal: Optional[float] = None
+    tax: Optional[float] = None
+    currency: Optional[str] = "INR"
+    category: Optional[str] = "Other"
+    payment_method: Optional[str] = None
     confidence_score: float = 0.90
     items: List[Dict[str, Any]] = []
     raw_text: str = ""
     receipt_image_path: Optional[str] = None
     is_readable: bool = True
+    has_discrepancy: bool = False
     error_message: Optional[str] = None

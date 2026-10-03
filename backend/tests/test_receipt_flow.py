@@ -171,8 +171,57 @@ def test_full_receipt_pipeline():
     assert db_exp.receipt_image_path == data1["receipt_image_path"]
     db.close()
     
+    # ----------------------------------------------------
+    # TEST 4: Invoice Template Regression Test
+    # ----------------------------------------------------
+    r4_lines = [
+        ("(just) Invoice", "title"),
+        ("Company", "body"),
+        ("name", "body"),
+        ("Invoice date: 2nd June", "body"),
+        ("Invoke no: 00325", "body"),
+        ("Customer phone: +1234 567890", "body"),
+        ("----------------------------------------------------------", "body"),
+        ("Your title here                $49", "body"),
+        ("Your title here                $51", "body"),
+        ("----------------------------------------------------------", "body"),
+        ("Subtotal: $100", "body"),
+        ("Tax: 0%", "body"),
+        ("Total: $100", "bold"),
+    ]
+    r4_file = create_receipt_image(r4_lines, "test_invoice_template.png")
+
+    with open(r4_file, "rb") as f:
+        scan_resp4 = client.post(
+            "/api/expenses/receipt",
+            headers=headers,
+            files={"file": ("test_invoice_template.png", f, "image/png")}
+        )
+
+    assert scan_resp4.status_code == 200, f"Scan 4 failed: {scan_resp4.text}"
+    data4 = scan_resp4.json()
+
+    print("\n[RECEIPT 4 INVOICE TEMPLATE EXTRACTED DATA]:")
+    print(f"  Merchant:     {data4['merchant']}")
+    print(f"  Total Amount: ${data4['amount']} (Expected 100.0, NEVER 374 or 325)")
+    print(f"  Category:     {data4['category']}")
+    print(f"  Payment:      {data4['payment_method']}")
+    print(f"  Date:         {data4['expense_date']} (Expected 2026-06-02)")
+    print(f"  Items ({len(data4['items'])}): {data4['items']}")
+    print(f"  Currency:     {data4['currency']}")
+
+    # Strict Assertions for Receipt 4 Regression
+    assert data4["amount"] == 100.0, f"Expected 100.0, got {data4['amount']}"
+    assert data4["amount"] != 374.0, "Regression: Total became 374 instead of 100!"
+    assert data4["amount"] != 325.0, "Regression: Invoice number 325 became amount!"
+    assert data4["expense_date"] == "2026-06-02", f"Expected date 2026-06-02, got {data4['expense_date']}"
+    assert data4["merchant"] not in ["(just) Invoice", "Invoice", "Company", "name"]
+    assert data4["payment_method"] is None
+    assert any(it["price"] == 49.0 for it in data4["items"])
+    assert any(it["price"] == 51.0 for it in data4["items"])
+
     # Cleanup test files
-    for fl in [r1_file, r2_file]:
+    for fl in [r1_file, r2_file, r4_file]:
         if os.path.exists(fl):
             os.remove(fl)
             

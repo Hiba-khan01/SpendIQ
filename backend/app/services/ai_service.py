@@ -145,6 +145,103 @@ class AIService:
             "raw_text": text
         }
 
+    def _parse_amount_str(self, raw_val: str) -> Optional[float]:
+        if not raw_val:
+            return None
+        cleaned = raw_val.strip().replace(',', '')
+        cleaned = re.sub(r'^[sS$₹€£]\s*', '', cleaned)
+        if re.search(r'[0-9loO]', cleaned):
+            cleaned = cleaned.replace('o', '0').replace('O', '0').replace('l', '1').replace('I', '1')
+        m = re.search(r'(\d+(?:\.\d{1,2})?)', cleaned)
+        if m:
+            try:
+                return float(m.group(1))
+            except ValueError:
+                pass
+        return None
+
+    def _extract_receipt_date(self, raw_text: str, clean_lines: List[str]) -> Optional[str]:
+        months_map = {
+            'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3,
+            'apr': 4, 'april': 4, 'may': 5, 'jun': 6, 'june': 6,
+            'jul': 7, 'july': 7, 'aug': 8, 'august': 8, 'sep': 9, 'sept': 9, 'september': 9,
+            'oct': 10, 'october': 10, 'nov': 11, 'november': 11, 'dec': 12, 'december': 12
+        }
+
+        # Check explicit date lines first e.g. "Invoice date\n 2nd June" or "Date: 02/10/2026"
+        for idx, line in enumerate(clean_lines):
+            m_prefix = re.search(r'(?i)\b(?:invoice\s*date|date|dated)\b[:\s]*(.+)?', line)
+            if m_prefix:
+                prefix_val = m_prefix.group(1).strip() if m_prefix.group(1) else ""
+                line_to_check = prefix_val if prefix_val else (clean_lines[idx + 1] if idx + 1 < len(clean_lines) else "")
+                if line_to_check:
+                    m1 = re.search(r'\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})(?:\s*,?\s*(20\d{2}))?\b', line_to_check)
+                    if m1:
+                        d = int(m1.group(1))
+                        m_name = m1.group(2).lower()
+                        if m_name in months_map:
+                            m = months_map[m_name]
+                            y = int(m1.group(3)) if m1.group(3) else date.today().year
+                            if 1 <= d <= 31:
+                                return f"{y:04d}-{m:02d}-{d:02d}"
+
+                    m2 = re.search(r'\b([A-Za-z]{3,9})\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s*,?\s*(20\d{2}))?\b', line_to_check)
+                    if m2:
+                        m_name = m2.group(1).lower()
+                        if m_name in months_map:
+                            m = months_map[m_name]
+                            d = int(m2.group(2))
+                            y = int(m2.group(3)) if m2.group(3) else date.today().year
+                            if 1 <= d <= 31:
+                                return f"{y:04d}-{m:02d}-{d:02d}"
+
+                    m3 = re.search(r'\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b', line_to_check)
+                    if m3:
+                        y, m, d = int(m3.group(1)), int(m3.group(2)), int(m3.group(3))
+                        if 1 <= m <= 12 and 1 <= d <= 31:
+                            return f"{y:04d}-{m:02d}-{d:02d}"
+
+                    m4 = re.search(r'\b(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})\b', line_to_check)
+                    if m4:
+                        d, m, y = int(m4.group(1)), int(m4.group(2)), int(m4.group(3))
+                        if 1 <= m <= 12 and 1 <= d <= 31:
+                            return f"{y:04d}-{m:02d}-{d:02d}"
+
+        # Global search in raw_text
+        m1 = re.search(r'\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})(?:\s*,?\s*(20\d{2}))?\b', raw_text)
+        if m1:
+            d = int(m1.group(1))
+            m_name = m1.group(2).lower()
+            if m_name in months_map:
+                m = months_map[m_name]
+                y = int(m1.group(3)) if m1.group(3) else date.today().year
+                if 1 <= d <= 31:
+                    return f"{y:04d}-{m:02d}-{d:02d}"
+
+        m2 = re.search(r'\b([A-Za-z]{3,9})\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s*,?\s*(20\d{2}))?\b', raw_text)
+        if m2:
+            m_name = m2.group(1).lower()
+            if m_name in months_map:
+                m = months_map[m_name]
+                d = int(m2.group(2))
+                y = int(m2.group(3)) if m2.group(3) else date.today().year
+                if 1 <= d <= 31:
+                    return f"{y:04d}-{m:02d}-{d:02d}"
+
+        m3 = re.search(r'\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b', raw_text)
+        if m3:
+            y, m, d = int(m3.group(1)), int(m3.group(2)), int(m3.group(3))
+            if 1 <= m <= 12 and 1 <= d <= 31:
+                return f"{y:04d}-{m:02d}-{d:02d}"
+
+        m4 = re.search(r'\b(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})\b', raw_text)
+        if m4:
+            d, m, y = int(m4.group(1)), int(m4.group(2)), int(m4.group(3))
+            if 1 <= m <= 12 and 1 <= d <= 31:
+                return f"{y:04d}-{m:02d}-{d:02d}"
+
+        return None
+
     def extract_receipt_data(
         self,
         ocr_input: Union[str, Dict[str, Any]],
@@ -163,18 +260,22 @@ class AIService:
             lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
 
         if not raw_text or len(raw_text.strip()) < 5:
-            logger.warning(f"Receipt scan failed: OCR returned empty or insufficient text (<5 chars).")
+            logger.warning("Receipt scan failed: OCR returned empty or insufficient text (<5 chars).")
             return {
                 "merchant": None,
                 "expense_date": date.today().isoformat(),
                 "amount": None,
+                "subtotal": None,
+                "tax": None,
+                "currency": "INR",
                 "category": "Other",
-                "payment_method": "Card",
+                "payment_method": None,
                 "confidence_score": 0.0,
                 "items": [],
                 "raw_text": raw_text or "",
                 "receipt_image_path": image_path,
                 "is_readable": False,
+                "has_discrepancy": False,
                 "error_message": "We couldn't read this receipt clearly. Try a clearer image."
             }
 
@@ -184,219 +285,306 @@ class AIService:
             clean_lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
 
         # ----------------------------------------------------
-        # 1. MERCHANT NAME EXTRACTION
+        # 1. CURRENCY DETECTION
         # ----------------------------------------------------
-        merchant = None
-        noise_line_patterns = [
-            r'^(tax\s*invoice|invoice|receipt|bill|gst|gstin|welcome|date|time|store\s*#|order\s*#|table\s*#|pos|terminal)',
-            r'^\d+\s+[a-zA-Z\s]+(road|street|nagar|lane|layout|marg|ave|avenue|bengaluru|bangalore|mumbai|delhi|hyderabad|chennai)',
-            r'^\+?\d{10,12}$',
-            r'^[=\-_*#~]{3,}$',
-            r'^\d{6}$',
-            r'^(thank\s*you|visit\s*again|customer\s*copy|merchant\s*copy)'
-        ]
-
-        for line in clean_lines[:6]:
-            is_noise = any(re.search(pat, line, re.IGNORECASE) for pat in noise_line_patterns)
-            if not is_noise and len(line) >= 3 and not re.search(r'^\d', line):
-                # Clean up trailing noise
-                cleaned_m = re.sub(r'[\-_*#:].*$', '', line).strip()
-                if len(cleaned_m) >= 3:
-                    merchant = cleaned_m
-                    break
-
-        if not merchant and clean_lines:
-            merchant = clean_lines[0]
+        currency = "INR"
+        if "$" in raw_text:
+            currency = "USD"
+        elif "€" in raw_text:
+            currency = "EUR"
+        elif "£" in raw_text:
+            currency = "GBP"
+        elif "₹" in raw_text or re.search(r'\b(rs\.?|inr|rupees)\b', raw_text, re.IGNORECASE):
+            currency = "INR"
 
         # ----------------------------------------------------
         # 2. DATE EXTRACTION
         # ----------------------------------------------------
-        expense_date = None
-        # Try YYYY-MM-DD
-        m_date = re.search(r'\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b', raw_text)
-        if m_date:
-            try:
-                y, m, d = int(m_date.group(1)), int(m_date.group(2)), int(m_date.group(3))
-                if 1 <= m <= 12 and 1 <= d <= 31:
-                    expense_date = f"{y:04d}-{m:02d}-{d:02d}"
-            except ValueError:
-                pass
-
-        # Try DD-MM-YYYY or DD/MM/YYYY
-        if not expense_date:
-            m_date2 = re.search(r'\b(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})\b', raw_text)
-            if m_date2:
-                try:
-                    d, m, y = int(m_date2.group(1)), int(m_date2.group(2)), int(m_date2.group(3))
-                    if 1 <= m <= 12 and 1 <= d <= 31:
-                        expense_date = f"{y:04d}-{m:02d}-{d:02d}"
-                except ValueError:
-                    pass
-
-        if not expense_date:
-            parsed_dt = parse_relative_date(raw_text, date.today())
-            expense_date = parsed_dt.isoformat() if parsed_dt else date.today().isoformat()
+        parsed_date = self._extract_receipt_date(raw_text, clean_lines)
+        if not parsed_date:
+            rel_dt = parse_relative_date(raw_text, date.today())
+            parsed_date = rel_dt.isoformat() if rel_dt else date.today().isoformat()
+        expense_date = parsed_date
 
         # ----------------------------------------------------
         # 3. LINE ITEMS EXTRACTION
         # ----------------------------------------------------
-        items = []
-        non_item_keywords = r'(?i)\b(subtotal|sub-total|grand\s*total|total\s*amount|final\s*total|net\s*amount|total\s*payable|amount\s*payable|total\s*due|amount\s*due|balance\s*due|total|tax|gst|cgst|sgst|vat|discount|round\s*off|cash|card|upi|change|balance|invoice|bill\s*no|date|time|table|tel|phone|store)\b'
+        non_item_keywords = (
+            r'(?i)\b('
+            r'subtotal|sub\s*total|sub-total|grand\s*total|total\s*amount|final\s*total|net\s*amount|'
+            r'total\s*payable|amount\s*payable|total\s*due|amount\s*due|balance\s*due|net\s*due|total|'
+            r'tax|gst|cgst|sgst|igst|vat|cess|discount|round\s*off|change|balance|'
+            r'cash|card|upi|credit\s*card|debit\s*card|payment|paid\s*by|'
+            r'invoice|invoke|bill\s*no|receipt\s*no|order\s*no|table\s*no|pos\s*#|terminal|'
+            r'date|time|tel|phone|mobile|fax|email|website|'
+            r'gstin|fssai|tin|cin|pan|hsn|sac|tax\s*id|reg\s*no|regn\s*no|'
+            r'payment\s*info|bank\s*details|account\s*here|nc\s*here|'
+            r'description\s*price|qty\s*price|items?\s*rate|description\s*amount|'
+            r'thank\s*you|visit\s*again|customer\s*copy|merchant\s*copy'
+            r')\b'
+        )
 
-        for line in clean_lines:
-            # Check pattern: Item Name + Price (e.g. "Gourmet Sandwich Rs 320.00" or "Pizza ₹499")
-            m_item = re.search(r'^([a-zA-Z0-9\s&\'\.\(\)\-\+]{2,45}?)\s+(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{2})?)$', line, re.IGNORECASE)
-            if m_item:
-                name = m_item.group(1).strip()
-                price_str = m_item.group(2).replace(",", "")
-                # Skip if name is a total, tax, or receipt header
-                if not re.search(non_item_keywords, name) and not re.search(r'^[=\-_*#]{2,}$', name):
-                    try:
-                        price_val = float(price_str)
-                        if 1.0 <= price_val <= 500000.0 and len(name) >= 2:
-                            items.append({"name": name, "price": price_val, "quantity": 1})
-                    except ValueError:
-                        pass
-
-        line_items_sum = round(sum(i["price"] * i.get("quantity", 1) for i in items), 2)
-
-        # ----------------------------------------------------
-        # 4. TOTAL AMOUNT EXTRACTION & LOGICAL VALIDATION
-        # ----------------------------------------------------
-        # Pattern set 1: Explicit Grand Total / Total Amount lines
-        grand_total_patterns = [
-            r'(?i)\b(?:grand\s*total|total\s*amount|final\s*total|net\s*amount|total\s*payable|amount\s*payable|net\s*payable|bill\s*amount)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)',
-            r'(?i)\b(?:total|net\s*total)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)',
+        filler_patterns = [
+            r'\b(lorem|ipsum|ipwm|dolor|amet|arnef|consectet|adipis|elit|nonummy|nibh|euismod|et-ismod|evismod)\b'
         ]
 
-        extracted_total = None
-        matched_total_line = None
+        def is_filler_text(text: str) -> bool:
+            words = re.findall(r'[a-zA-Z]+', text.lower())
+            if not words:
+                return False
+            filler_count = sum(1 for w in words if any(re.search(pat, w) for pat in filler_patterns))
+            return (filler_count / len(words)) >= 0.35
 
-        for pat in grand_total_patterns:
+        address_patterns = (
+            r'(?i)\b('
+            r'road|street|nagar|lane|layout|marg|ave|avenue|bengaluru|bangalore|mumbai|delhi|'
+            r'hyderabad|chennai|pincode|pin|zip|po\s*box'
+            r')\b'
+        )
+
+        items = []
+        for idx, line in enumerate(clean_lines):
+            # Match item price at end of line (e.g. '$49', 'Rs 320.00', 'Rs 2,499.00', '450.00')
+            m_price = re.search(r'(?:rs\.?|inr|₹|\$|€|£|s)?\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*[\.\-]?$', line, re.IGNORECASE)
+            if not m_price:
+                continue
+
+            price_raw = m_price.group(1).replace(',', '')
+            # Reject identifiers / invoice numbers with leading zeros like '00325'
+            if re.match(r'^0\d+$', price_raw):
+                continue
+
+            try:
+                price_val = float(price_raw)
+            except ValueError:
+                continue
+
+            if not (0.5 <= price_val <= 1000000.0):
+                continue
+
+            # Text before price
+            raw_name = line[:m_price.start()].strip()
+            raw_name = re.sub(r'[\-:=~#_]+$', '', raw_name).strip()
+
+            # Reject if raw_name matches non-item keywords, address patterns, or is noise
+            if not raw_name or re.search(non_item_keywords, raw_name) or re.search(address_patterns, raw_name) or re.search(r'^[=\-_*#~]{2,}$', raw_name):
+                continue
+
+            # Reject if raw_name is purely digits/phone characters (e.g. +123456700)
+            if not re.search(r'[a-zA-Z]{2,}', raw_name):
+                continue
+
+            # Reject if price looks like a 6-digit postal code (e.g. 560001)
+            if price_val > 100000 and re.search(r'\b\d{6}\b', price_raw):
+                continue
+
+            # Check if raw_name is dummy/filler Latin text e.g. 'Lorem ipsum...'
+            if is_filler_text(raw_name):
+                # Scan backwards to locate the preceding title line e.g. 'Your title here'
+                found_title = None
+                for back_idx in range(idx - 1, max(-1, idx - 4), -1):
+                    cand_line = clean_lines[back_idx].strip()
+                    if (not re.search(non_item_keywords, cand_line)
+                        and not re.search(address_patterns, cand_line)
+                        and re.search(r'[a-zA-Z]{2,}', cand_line)
+                        and not is_filler_text(cand_line)
+                        and not re.search(r'(?:rs\.?|inr|₹|\$|€|£)?\s*[0-9,]+(?:\.[0-9]{1,2})?$', cand_line, re.IGNORECASE)):
+                        found_title = cand_line
+                        break
+                if found_title:
+                    raw_name = found_title
+
+            # Clean name
+            clean_name = re.sub(r'^(item\s*\d*|\d+[\.\)]\s*)', '', raw_name, flags=re.IGNORECASE).strip()
+            if len(clean_name) >= 2 and not is_filler_text(clean_name):
+                items.append({'name': clean_name, 'price': price_val, 'quantity': 1})
+            elif len(clean_name) >= 2 and is_filler_text(clean_name):
+                items.append({'name': 'Item', 'price': price_val, 'quantity': 1})
+
+        line_items_sum = round(sum(i['price'] * i.get('quantity', 1) for i in items), 2)
+
+        # ----------------------------------------------------
+        # 4. TOTAL & SUBTOTAL EXTRACTION
+        # ----------------------------------------------------
+        extracted_total = None
+        subtotal = None
+        tax = None
+
+        # Explicit Grand Total
+        for idx, line in enumerate(clean_lines):
+            m_tot = re.search(r'(?i)\b(?:grand\s*total|total\s*amount|final\s*total|net\s*amount|total\s*payable|amount\s*payable|net\s*payable|bill\s*amount)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£|s)?\s*([0-9loO,]+(?:\.[0-9loO]{1,2})?)', line)
+            if m_tot:
+                cand = self._parse_amount_str(m_tot.group(1))
+                if cand and cand not in [2024, 2025, 2026, 2027]:
+                    extracted_total = cand
+                    break
+
+        if extracted_total is None:
             for idx, line in enumerate(clean_lines):
-                m = re.search(pat, line)
-                if m:
+                m_tot = re.search(r'(?i)\b(?:total|net\s*total)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£|s)?\s*([0-9loO,]+(?:\.[0-9loO]{1,2})?)', line)
+                if m_tot:
+                    cand = self._parse_amount_str(m_tot.group(1))
+                    if cand and cand not in [2024, 2025, 2026, 2027]:
+                        extracted_total = cand
+                        break
+
+        # Subtotal
+        for line in clean_lines:
+            m_sub = re.search(r'(?i)\b(?:sub\s*total|sub-total|subtotal)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£|s)?\s*([0-9loO,]+(?:\.[0-9loO]{1,2})?)', line)
+            if m_sub:
+                cand = self._parse_amount_str(m_sub.group(1))
+                if cand:
+                    subtotal = cand
+                    break
+
+        # Tax
+        tax_sum = 0.0
+        found_tax = False
+        for line in clean_lines:
+            if re.search(r'(?i)\b(?:tax|gst|vat|cgst|sgst|cess|service\s*tax)\b', line):
+                if re.search(r'(?i)\b0(?:\.0+)?\s*%', line):
+                    if not found_tax:
+                        tax_sum = 0.0
+                        found_tax = True
+                m_amt = re.search(r'(?:rs\.?|inr|₹|\$|€|£)?\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*$', line, re.IGNORECASE)
+                if m_amt and not line.strip().endswith('%'):
                     try:
-                        cand = float(m.group(1).replace(",", ""))
-                        # Guard against year / invoice numbers / tiny noise
-                        if cand > 0 and cand != 2026 and cand != 2025:
-                            extracted_total = cand
-                            matched_total_line = line
-                            break
+                        t_val = float(m_amt.group(1).replace(',', ''))
+                        tax_sum += t_val
+                        found_tax = True
                     except ValueError:
                         pass
-                # Also check if the price is on the very next line after "TOTAL AMOUNT"
-                elif re.search(r'(?i)^\s*(?:grand\s*total|total\s*amount|total)\s*[:=]?\s*$', line) and idx + 1 < len(clean_lines):
-                    next_line = clean_lines[idx + 1]
-                    m_next = re.search(r'(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)', next_line, re.IGNORECASE)
-                    if m_next:
-                        try:
-                            cand = float(m_next.group(1).replace(",", ""))
-                            if cand > 0 and cand != 2026:
-                                extracted_total = cand
-                                matched_total_line = f"{line} -> {next_line}"
-                                break
-                        except ValueError:
-                            pass
-            if extracted_total is not None:
-                break
+        if found_tax:
+            tax = round(tax_sum, 2)
 
-        # Subtotal fallback if grand total was not matched
-        subtotal = None
-        for line in clean_lines:
-            m_sub = re.search(r'(?i)\b(?:subtotal|sub-total)\b[:=\s]*(?:rs\.?|inr|₹|\$|€|£)?\s*([\d,]+(?:\.\d{1,2})?)', line)
-            if m_sub:
-                try:
-                    subtotal = float(m_sub.group(1).replace(",", ""))
-                    break
-                except ValueError:
-                    pass
-
-        # ----------------------------------------------------
-        # CONSISTENCY CHECK & DISCREPANCY RESOLUTION
-        # ----------------------------------------------------
+        # Total Resolution Strategy
         final_amount = None
-        consistency_status = "unverified"
+        has_discrepancy = False
 
-        if extracted_total is not None:
-            if items and line_items_sum > 0:
-                # Normal variation allow: items sum <= total <= items sum * 1.35 (taxes/service charge)
-                # or total <= items sum * 1.0 (discounts)
-                if 0.70 * line_items_sum <= extracted_total <= 1.50 * line_items_sum:
-                    final_amount = extracted_total
-                    consistency_status = "consistent_with_items"
-                else:
-                    # Wild discrepancy detected (e.g. extracted_total=84912 vs line_items_sum=650)
-                    logger.warning(
-                        f"Receipt Extraction Discrepancy: Extracted Grand Total ({extracted_total}) "
-                        f"does not match Line Items Sum ({line_items_sum}). Resolving to actual receipt total."
-                    )
-                    # Check if subtotal or line items sum matches a printed amount on receipt
-                    if subtotal and 0.70 * line_items_sum <= subtotal <= 1.50 * line_items_sum:
-                        final_amount = subtotal
-                        consistency_status = "corrected_to_subtotal"
-                    else:
-                        final_amount = line_items_sum
-                        consistency_status = "corrected_to_line_items_sum"
-            else:
+        if subtotal is not None and items and line_items_sum > 0 and abs(line_items_sum - subtotal) <= 0.05:
+            # Strong supporting evidence: line items sum equals detected subtotal
+            computed_total = round(subtotal + (tax or 0.0), 2)
+            if extracted_total is not None and abs(extracted_total - computed_total) <= 0.05:
                 final_amount = extracted_total
-                consistency_status = "total_only_no_items"
+                has_discrepancy = False
+            elif extracted_total is not None and abs(extracted_total - computed_total) > 0.05:
+                # Disagreement between explicit total and verified line-item sum: keep detected total but flag discrepancy
+                final_amount = extracted_total
+                has_discrepancy = True
+            else:
+                # Corrupted or missing explicit grand total: resolve to validated subtotal + tax
+                final_amount = computed_total
+                has_discrepancy = False
+        elif extracted_total is not None:
+            final_amount = extracted_total
+            if items and line_items_sum > 0:
+                expected = round((subtotal or line_items_sum) + (tax or 0.0), 2)
+                if abs(extracted_total - line_items_sum) > 0.05 and abs(extracted_total - expected) > 0.05:
+                    has_discrepancy = True
         elif subtotal is not None:
-            final_amount = subtotal
-            consistency_status = "used_subtotal"
+            final_amount = round(subtotal + (tax or 0.0), 2)
+            if items and line_items_sum > 0 and abs(final_amount - line_items_sum) > 0.05:
+                has_discrepancy = True
         elif items and line_items_sum > 0:
             final_amount = line_items_sum
-            consistency_status = "used_line_items_sum"
+            has_discrepancy = False
 
         # ----------------------------------------------------
-        # 5. PAYMENT METHOD & CATEGORY
+        # 5. MERCHANT NAME EXTRACTION
         # ----------------------------------------------------
-        payment_method = "Card"
-        if re.search(r'\b(upi|gpay|google\s*pay|phonepe|paytm)\b', raw_text, re.IGNORECASE):
+        generic_merchant_keywords = [
+            r'^(tax\s*invoice|invoice|receipt|bill|statement|proforma|welcome|date|time|store\s*#|order\s*#|table\s*#|pos|terminal|inve|invoke)',
+            r'^\(?just\)?\s*invoice',
+            r'^(company\s*name|your\s*company|business\s*name|company|customer|name|customer\s*phone|phone|contact)$',
+            r'\b(customer\s*phone|contact\s*no|phone\s*no|mobile\s*no|tel\s*no|phone)\b',
+            r'^\d+\s+[a-zA-Z\s]+(road|street|nagar|lane|layout|marg|ave|avenue|bengaluru|bangalore|mumbai|delhi|hyderabad|chennai)',
+            r'^\+?\d{10,12}$',
+            r'^[=\-_*#~]{3,}$',
+            r'^(thank\s*you|visit\s*again|customer\s*copy|merchant\s*copy|description\s*price)',
+            r'\b(invoice\s*to|inve.*to|billed\s*to|bill\s*to|customer\s*name|client)\b',
+            r'^(january|february|march|april|may|june|july|august|september|october|november|december)',
+        ]
+
+        merchant = None
+        is_under_customer_section = False
+        for line in clean_lines[:6]:
+            cleaned_m = re.sub(r'[\-_*#:].*$', '', line).strip()
+            if re.search(r'\b(invoice\s*to|inve.*to|billed\s*to|bill\s*to)\b', line, re.IGNORECASE):
+                is_under_customer_section = True
+                continue
+            if is_under_customer_section:
+                is_under_customer_section = False
+                continue
+            is_generic = any(re.search(pat, line, re.IGNORECASE) or re.search(pat, cleaned_m, re.IGNORECASE) for pat in generic_merchant_keywords)
+            if not is_generic and len(line) >= 3 and not re.search(r'^\d', line):
+                if len(cleaned_m) >= 3 and not any(re.search(pat, cleaned_m, re.IGNORECASE) for pat in generic_merchant_keywords):
+                    merchant = cleaned_m
+                    break
+
+        # ----------------------------------------------------
+        # 6. PAYMENT METHOD
+        # ----------------------------------------------------
+        payment_method = None
+        if re.search(r'\b(upi|gpay|google\s*pay|phonepe|paytm|bhim)\b', raw_text, re.IGNORECASE):
             payment_method = "UPI"
-        elif re.search(r'\b(credit\s*card|visa|mastercard|amex)\b', raw_text, re.IGNORECASE):
+        elif re.search(r'\b(credit\s*card|visa|mastercard|amex|rupay|paid\s*by\s*credit\s*card|paid\s*by\s*card)\b', raw_text, re.IGNORECASE):
             payment_method = "Credit Card"
-        elif re.search(r'\b(debit\s*card)\b', raw_text, re.IGNORECASE):
+        elif re.search(r'\b(debit\s*card|paid\s*by\s*debit\s*card)\b', raw_text, re.IGNORECASE):
             payment_method = "Debit Card"
-        elif re.search(r'\b(cash)\b', raw_text, re.IGNORECASE):
+        elif re.search(r'\b(cash|paid\s*by\s*cash|cash\s*tender|counter\s*cash)\b', raw_text, re.IGNORECASE):
             payment_method = "Cash"
-        elif re.search(r'\b(net\s*banking|bank\s*transfer)\b', raw_text, re.IGNORECASE):
+        elif re.search(r'\b(net\s*banking|bank\s*transfer|neft|imps|rtgs)\b', raw_text, re.IGNORECASE):
             payment_method = "Bank Transfer"
 
-        # Predict Category
-        merchant_for_cat = merchant or "General"
-        items_text = " ".join(i["name"] for i in items)
-        cat, conf, _ = categorization_service.predict_category(f"{merchant_for_cat} {items_text} {raw_text[:200]}")
+        # ----------------------------------------------------
+        # 7. CATEGORY PREDICTION
+        # ----------------------------------------------------
+        if merchant and merchant != "Other":
+            items_text = " ".join(i["name"] for i in items if i["name"] != "Item")
+            cat, conf, _ = categorization_service.predict_category(f"{merchant} {items_text}")
+            confidence_score = conf if conf >= 0.60 else 0.50
+        else:
+            items_text = " ".join(i["name"] for i in items if i["name"] not in ["Item", "Your title here"])
+            if items_text:
+                cat, conf, _ = categorization_service.predict_category(items_text)
+                confidence_score = conf
+            else:
+                cat = "Other"
+                confidence_score = 0.40
 
-        is_readable = final_amount is not None and final_amount > 0 and merchant is not None
-        confidence = 0.95 if (is_readable and consistency_status in ["consistent_with_items", "total_only_no_items"]) else (0.80 if is_readable else 0.30)
+        is_readable = bool(final_amount and final_amount > 0)
+        overall_confidence = 0.95 if (is_readable and not has_discrepancy and merchant) else (0.75 if is_readable else 0.30)
 
         # ----------------------------------------------------
-        # 6. DETAILED LOGGING FOR DEVELOPMENT / TRACING
+        # 8. DETAILED LOGGING
         # ----------------------------------------------------
-        logger.info(f"=== RECEIPT SCAN REPORT ===")
+        logger.info("=== RECEIPT SCAN REPORT ===")
         logger.info(f"Image Path: {image_path}")
         logger.info(f"Extracted Merchant: '{merchant}'")
         logger.info(f"Extracted Date: {expense_date}")
         logger.info(f"Detected Line Items ({len(items)}): {items}")
-        logger.info(f"Line Items Sum: ₹{line_items_sum}")
-        logger.info(f"Matched Total Line: '{matched_total_line}', Raw Total: {extracted_total}")
-        logger.info(f"Final Resolved Total: ₹{final_amount} (Status: {consistency_status})")
+        logger.info(f"Line Items Sum: {currency} {line_items_sum}")
+        logger.info(f"Detected Subtotal: {subtotal}, Tax: {tax}")
+        logger.info(f"Final Resolved Total: {currency} {final_amount} (Has Discrepancy: {has_discrepancy})")
         logger.info(f"Category: {cat}, Payment Method: {payment_method}")
-        logger.info(f"Confidence: {confidence}, is_readable: {is_readable}")
-        logger.info(f"===========================")
+        logger.info(f"Confidence: {overall_confidence}, is_readable: {is_readable}")
+        logger.info("===========================")
 
         return {
             "merchant": merchant,
             "expense_date": expense_date,
             "amount": final_amount,
+            "subtotal": subtotal,
+            "tax": tax,
+            "currency": currency,
             "category": cat,
             "payment_method": payment_method,
-            "confidence_score": round(confidence, 2),
+            "confidence_score": round(overall_confidence, 2),
             "items": items,
             "raw_text": raw_text,
             "receipt_image_path": image_path,
             "is_readable": is_readable,
+            "has_discrepancy": has_discrepancy,
             "error_message": None if is_readable else "We couldn't read all details with high confidence. Please verify fields before saving."
         }
 

@@ -86,30 +86,31 @@ export const ReceiptScanner = () => {
       const result = await expenseService.scanReceipt(data);
       setScanResult(result);
 
-      // Populate form data
+      // Populate form data exactly from scan result without fabricating placeholders
       setFormData({
-        amount: result.amount || '',
-        merchant: result.merchant || 'Retail Merchant',
-        category: result.category || 'Food',
-        subcategory: 'Receipt Purchase',
-        payment_method: result.payment_method || 'Card',
+        amount: result.amount !== null && result.amount !== undefined ? result.amount : '',
+        merchant: result.merchant || '',
+        category: result.category || 'Other',
+        subcategory: result.subcategory || '',
+        payment_method: result.payment_method || '',
         expense_date: result.expense_date || new Date().toISOString().split('T')[0],
         description: result.items?.length
           ? result.items.map((i) => i.name).slice(0, 3).join(', ')
-          : 'Scanned receipt purchase',
+          : '',
       });
 
-      if (!result.is_readable) {
+      const displayCurr = result.currency || currency;
+      if (!result.is_readable || result.has_discrepancy) {
         toast({
           type: 'warning',
           title: 'Verification Needed',
-          message: result.error_message || 'Please verify the fields before saving.',
+          message: result.error_message || (result.has_discrepancy ? 'Total amount differs from line items sum. Please verify fields before saving.' : 'Please verify the fields before saving.'),
         });
       } else {
         toast({
           type: 'success',
           title: 'Receipt Scanned!',
-          message: `Extracted ${formatCurrency(result.amount, currency)} from ${result.merchant}.`,
+          message: `Extracted ${formatCurrency(result.amount, displayCurr)}${result.merchant ? ' from ' + result.merchant : ''}.`,
         });
       }
     } catch (err) {
@@ -300,12 +301,12 @@ export const ReceiptScanner = () => {
                   {scanResult.items.map((it, idx) => (
                     <div key={idx} className="py-2 flex items-center justify-between">
                       <span className="text-slate-800 dark:text-slate-200 font-medium">{it.name}</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(it.price, currency)}</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(it.price, scanResult.currency || currency)}</span>
                     </div>
                   ))}
                   <div className="pt-3 flex items-center justify-between font-extrabold text-sm text-slate-900 dark:text-white">
                     <span>Grand Total</span>
-                    <span className="text-emerald-500">{formatCurrency(scanResult.amount, currency)}</span>
+                    <span className="text-emerald-500">{formatCurrency(scanResult.amount, scanResult.currency || currency)}</span>
                   </div>
                 </div>
               ) : (
@@ -319,7 +320,7 @@ export const ReceiptScanner = () => {
             <div className="space-y-4 text-xs sm:text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Total Amount ({currency})</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Total Amount ({scanResult.currency || currency})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -335,6 +336,7 @@ export const ReceiptScanner = () => {
                     type="text"
                     required
                     value={formData.merchant}
+                    placeholder="e.g. Fresh Mart, Swiggy"
                     onChange={(e) => setFormData({ ...formData, merchant: e.target.value })}
                     className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
@@ -362,9 +364,11 @@ export const ReceiptScanner = () => {
                     onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                     className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   >
+                    <option value="">Select Payment Method</option>
                     <option value="Card">Credit / Debit Card</option>
                     <option value="UPI">UPI</option>
                     <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
                   </select>
                 </div>
               </div>

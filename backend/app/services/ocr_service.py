@@ -1,4 +1,6 @@
 import os
+import shutil
+import platform
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Any, List, Optional
@@ -9,6 +11,50 @@ logger = logging.getLogger(__name__)
 # Dedicated thread pool for OCR computation (avoids asyncio loop collision on Windows)
 ocr_executor = ThreadPoolExecutor(max_workers=3)
 
+
+def find_tesseract_binary() -> Optional[str]:
+    """
+    Locates the Tesseract OCR executable in a platform-aware and robust manner.
+    - Checks system PATH first using shutil.which.
+    - On Windows, checks standard installation directories and user LocalAppData.
+    - On Linux/macOS, checks standard Unix installation locations (/usr/bin, /usr/local/bin, /opt/homebrew/bin).
+    """
+    # 1. Check if 'tesseract' is accessible via PATH
+    path_bin = shutil.which("tesseract") or shutil.which("tesseract.exe")
+    if path_bin and os.path.exists(path_bin):
+        return path_bin
+
+    system_name = platform.system()
+    candidates: List[str] = []
+
+    if system_name == "Windows":
+        local_app_data = os.environ.get("LOCALAPPDATA", "")
+        candidates = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+            os.path.join(local_app_data, "Tesseract-OCR", "tesseract.exe") if local_app_data else "",
+            os.path.expanduser(r"~\AppData\Local\Tesseract-OCR\tesseract.exe"),
+        ]
+    else:
+        # Linux, macOS, Unix
+        candidates = [
+            "/usr/bin/tesseract",
+            "/usr/local/bin/tesseract",
+            "/opt/homebrew/bin/tesseract",
+            "/usr/bin/local/tesseract",
+        ]
+
+    for cand in candidates:
+        if cand and os.path.exists(cand) and os.path.isfile(cand):
+            return cand
+
+    # If shutil.which found a non-absolute command or on non-Windows default
+    if path_bin:
+        return path_bin
+
+    return None
+
+
 class OCRService:
     def __init__(self):
         self.winocr = None
@@ -17,36 +63,48 @@ class OCRService:
         self._init_ocr_engines()
 
     def _init_ocr_engines(self):
-        # 1. Check winocr (Windows Native Media OCR)
-        try:
-            import winocr
-            self.winocr = winocr
-            self.engine_name = "winocr"
-            logger.info("OCR Service: Initialized native Windows OCR engine (winocr).")
-            return
-        except ImportError:
+        current_platform = platform.system()
+
+        # 1. On Windows, try native winocr first
+        if current_platform == "Windows":
+            try:
+                import winocr
+                self.winocr = winocr
+                logger.info("OCR Service: Initialized native Windows OCR engine (winocr).")
+            except Exception as e:
+                self.winocr = None
+                logger.debug(f"OCR Service: winocr not available: {e}")
+        else:
             self.winocr = None
 
-        # 2. Check pytesseract as fallback
+        # 2. Check pytesseract (platform-independent or fallback on Windows)
         try:
             import pytesseract
-            tess_exe_candidates = [
-                r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-                r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-                r"C:\Users\hibak\AppData\Local\Tesseract-OCR\tesseract.exe",
-            ]
-            for cand in tess_exe_candidates:
-                if os.path.exists(cand):
-                    pytesseract.pytesseract.tesseract_cmd = cand
-                    break
-            self.pytesseract = pytesseract
-            self.engine_name = "pytesseract"
-            logger.info("OCR Service: Initialized Tesseract OCR engine.")
-            return
-        except ImportError:
+            tess_bin = find_tesseract_binary()
+            if tess_bin:
+                pytesseract.pytesseract.tesseract_cmd = tess_bin
+                self.pytesseract = pytesseract
+                logger.info(f"OCR Service: Initialized Tesseract OCR engine (binary: {tess_bin}).")
+            else:
+                self.pytesseract = None
+                logger.debug("OCR Service: Tesseract executable not found.")
+        except Exception as e:
             self.pytesseract = None
+            logger.debug(f"OCR Service: pytesseract library not available: {e}")
 
-        logger.warning("OCR Service: No OCR engine available.")
+        # 3. Determine selected primary OCR engine
+        if self.winocr is not None:
+            self.engine_name = "winocr"
+        elif self.pytesseract is not None:
+            self.engine_name = "pytesseract"
+        else:
+            self.engine_name = "none"
+
+        # 4. Small startup log showing which OCR engine was selected
+        if self.engine_name != "none":
+            logger.info(f"OCR Service: OCR engine selected: {self.engine_name}")
+        else:
+            logger.warning("OCR Service: No OCR engine available. OCR engine selected: none")
 
     def _preprocess_image(self, image_path: str) -> Optional[Image.Image]:
         try:
@@ -149,6 +207,9 @@ class OCRService:
                 "error": "Image decoding failed"
             }
 
+        img_dims = f"{img.width}x{img.height}"
+        logger.info(f"Receipt Scan Input: File='{os.path.basename(image_path)}', Dimensions={img_dims}, Primary Engine='{self.engine_name}'")
+
         # 1. Native Windows OCR executed via ThreadPool to ensure clean event loop isolation
         if self.winocr is not None:
             try:
@@ -158,6 +219,8 @@ class OCRService:
                 raw_text = "\n".join(lines) if lines else res.get("text", "")
                 
                 logger.info(f"winocr extracted {len(lines)} lines ({len(raw_text)} chars) from {os.path.basename(image_path)}")
+                logger.debug(f"winocr raw OCR text:\n{raw_text}")
+                logger.debug(f"winocr reconstructed lines: {lines}")
                 return {
                     "raw_text": raw_text,
                     "lines": lines,
@@ -172,7 +235,9 @@ class OCRService:
             try:
                 raw_text = self.pytesseract.image_to_string(img)
                 lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
-                logger.info(f"pytesseract extracted {len(lines)} lines from {os.path.basename(image_path)}")
+                logger.info(f"pytesseract extracted {len(lines)} lines ({len(raw_text)} chars) from {os.path.basename(image_path)}")
+                logger.debug(f"pytesseract raw OCR text:\n{raw_text}")
+                logger.debug(f"pytesseract lines: {lines}")
                 return {
                     "raw_text": raw_text,
                     "lines": lines,
